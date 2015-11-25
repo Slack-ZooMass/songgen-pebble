@@ -1,0 +1,23 @@
+{
+    "appKeys": {},
+    "capabilities": [
+        "configurable"
+    ],
+    "companyName": "stanleyrya@gmail.com",
+    "longName": "songgen",
+    "projectType": "native",
+    "resources": {
+        "media": []
+    },
+    "sdkVersion": "3",
+    "shortName": "songgen",
+    "targetPlatforms": [
+        "basalt",
+        "chalk"
+    ],
+    "uuid": "2a323a7b-9a10-4ee5-8b5b-0dd4a81d020d",
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": false
+    }
+}
