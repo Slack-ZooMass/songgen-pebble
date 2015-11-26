@@ -3,10 +3,24 @@
 static Window *s_main_window;
 static TextLayer *s_top_layer, *s_prompt_layer;
 
+// Keys for communicating with JS
+typedef enum {
+  KEY_JS_READY = 0,
+  KEY_ACCESS_TOKEN = 1,
+  KEY_REFRESH_TOKEN = 2,
+  KEY_WORDS = 3,
+  KEY_PLAYLIST_ID = 4
+} AppKey;
+
 static DictationSession *s_dictation_session;
 static char s_last_text[256];
 
 static bool s_speaking_enabled;
+static bool s_js_ready;
+
+typedef struct Credentials {
+  //TODO: use padding?
+}
 
 /********************************* Quiz Logic *********************************/
 
@@ -17,13 +31,19 @@ static void prompt_handler(void *context) {
   s_speaking_enabled = true;
 }
 
+static void result_handler(char *playlistID) {
+  text_layer_set_text(s_top_layer, playlistID);
+  text_layer_set_text(s_prompt_layer, "Press Select to create a new playlist!");
+  window_set_background_color(s_main_window, GColorDarkGray);
+  app_timer_register(3000, prompt_handler, NULL);
+}
+
 static void generate(char *answer) {
   text_layer_set_text(s_top_layer, "songgen");
   text_layer_set_text(s_prompt_layer, "Sending to server...");
 
-  // Send to server
+  //TODO: Send to server
 
-  app_timer_register(3000, prompt_handler, NULL);
 }
 
 /******************************* Dictation API ********************************/
@@ -35,6 +55,28 @@ static void dictation_session_callback(DictationSession *session, DictationSessi
     generate(transcription);
   } else {
     APP_LOG(APP_LOG_LEVEL_ERROR, "Transcription failed.\n\nError ID:\n%d", (int)status);
+  }
+}
+
+/******************************** JavaScript *********************************/
+
+static void inbox_received_handler(DictionaryIterator *iter, void *context) {
+  Tuple *ready_tuple = dict_find(iter, KEY_JS_READY);
+  if(ready_tuple) {
+    // PebbleKit JS is ready! Safe to send messages
+    s_js_ready = true;
+  }
+  
+  Tuple *access_token_tuple = dict_find(iter, KEY_ACCESS_TOKEN);
+  Tuple *refresh_token_tuple = dict_find(iter, KEY_REFRESH_TOKEN);
+  if(access_token_tuple && refresh_token_tuple) {
+    // We have credentials to save!
+  }
+  
+  Tuple *playlistID_tuple = dict_find(iter, KEY_PLAYLIST_ID);
+  if(playlistID_tuple) {
+    // We completed creating a playlist!
+    result_handler(playlistID_tuple->value->cstring); //TODO: check this
   }
 }
 
@@ -96,15 +138,24 @@ static void init() {
   // Create new dictation session
   s_dictation_session = dictation_session_create(sizeof(s_last_text),
                                                  dictation_session_callback, NULL);
-
+  
   window_set_background_color(s_main_window, GColorDarkGray);
   text_layer_set_text(s_top_layer, "songgen");
   s_speaking_enabled = true;
+  s_js_ready = false;
+  
+  //TODO: persistent storage load for credentials
+  
+  // Handle talking to JS
+  app_message_register_inbox_received(inbox_received_handler);
+  app_message_open(64, 64);
 }
 
 static void deinit() {
   // Free the last session data
   dictation_session_destroy(s_dictation_session);
+  
+  //TODO: persistent storage for credentials
 
   window_destroy(s_main_window);
 }
