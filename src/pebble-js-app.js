@@ -12,8 +12,8 @@ Pebble.addEventListener('webviewclosed', function(e) {
 
   // Prepare AppMessage payload
   var dict = {
-    'KEY_ACCESS_TOKEN': config_data[access_token],
-    'KEY_REFRESH_TOKEN': config_data[refresh_token]
+    'KEY_ACCESS_TOKEN': config_data['access_token'],
+    'KEY_REFRESH_TOKEN': config_data['refresh_token']
   };
 
   // Send settings to Pebble watchapp
