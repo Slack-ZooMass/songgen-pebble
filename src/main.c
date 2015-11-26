@@ -1,7 +1,5 @@
 #include <pebble.h>
 
-#define NUM_QUESTIONS 5
-
 static Window *s_main_window;
 static TextLayer *s_top_layer, *s_prompt_layer;
 
@@ -22,10 +20,10 @@ static void prompt_handler(void *context) {
 static void generate(char *answer) {
   text_layer_set_text(s_top_layer, "songgen");
   text_layer_set_text(s_prompt_layer, "Sending to server...");
-  
+
   // Send to server
 
-  app_timer_register(3000, next_question_handler, NULL);
+  app_timer_register(3000, prompt_handler, NULL);
 }
 
 /******************************* Dictation API ********************************/
