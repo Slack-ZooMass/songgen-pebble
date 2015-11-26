@@ -3,62 +3,27 @@
 #define NUM_QUESTIONS 5
 
 static Window *s_main_window;
-static TextLayer *s_question_layer, *s_prompt_layer;
+static TextLayer *s_top_layer, *s_prompt_layer;
 
 static DictationSession *s_dictation_session;
 static char s_last_text[256];
 
-static char s_questions[5][64] = {
-  "Which animal has a long trunk?",
-  "What color is the sky?",
-  "Which city is the capital of the UK?",
-  "Who was the first man on the Moon?",
-  "In which state is Silicon Valley?"
-};
-
-static char s_answers[5][32] = {
-  "lephant",  // E/elephant
-  "lue",      // Blue/blue
-  "London",
-  "Armstrong",
-  "California"
-};
-
-static int s_current_question, s_correct_answers;
 static bool s_speaking_enabled;
 
 /********************************* Quiz Logic *********************************/
 
-static void next_question_handler(void *context) {
-  if(s_current_question == NUM_QUESTIONS) {
-    // Quiz is over
-    window_set_background_color(s_main_window, GColorDukeBlue);
-    text_layer_set_text(s_question_layer, "Quiz Finished!");
-
-    static char s_result_buff[32];
-    snprintf(s_result_buff, sizeof(s_result_buff), "You got %d of %d correct!",
-             s_correct_answers, NUM_QUESTIONS);
-    text_layer_set_text(s_prompt_layer, s_result_buff);
-  } else {
-    // Next question
-    text_layer_set_text(s_question_layer, s_questions[s_current_question]);
-    text_layer_set_text(s_prompt_layer, "Press Select to speak your answer!");
-    window_set_background_color(s_main_window, GColorDarkGray);
-    s_speaking_enabled = true;
-  }
+static void prompt_handler(void *context) {
+  text_layer_set_text(s_top_layer, "songgen");
+  text_layer_set_text(s_prompt_layer, "Press Select to create a new playlist!");
+  window_set_background_color(s_main_window, GColorDarkGray);
+  s_speaking_enabled = true;
 }
 
-static void check_answer(char *answer) {
-  bool correct = strstr(answer, s_answers[s_current_question]);
-
-  correct ? vibes_double_pulse() : vibes_long_pulse();
-  text_layer_set_text(s_question_layer, correct ? "Correct!" : "Wrong!");
-  text_layer_set_text(s_prompt_layer, (s_current_question == NUM_QUESTIONS - 1)
-                      ? "" : "Here comes the next question...");
-  window_set_background_color(s_main_window, correct ? GColorGreen : GColorRed);
-  s_correct_answers += correct ? 1 : 0;
-
-  s_current_question++;
+static void generate(char *answer) {
+  text_layer_set_text(s_top_layer, "songgen");
+  text_layer_set_text(s_prompt_layer, "Sending to server...");
+  
+  // Send to server
 
   app_timer_register(3000, next_question_handler, NULL);
 }
@@ -68,8 +33,8 @@ static void check_answer(char *answer) {
 static void dictation_session_callback(DictationSession *session, DictationSessionStatus status,
                                        char *transcription, void *context) {
   if(status == DictationSessionStatusSuccess) {
-    // Check this answer
-    check_answer(transcription);
+    // Generate the words into a playlist
+    generate(transcription);
   } else {
     APP_LOG(APP_LOG_LEVEL_ERROR, "Transcription failed.\n\nError ID:\n%d", (int)status);
   }
@@ -93,12 +58,12 @@ static void window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
 
-  s_question_layer = text_layer_create(GRect(5, 5, bounds.size.w - 10, bounds.size.h));
-  text_layer_set_font(s_question_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
-  text_layer_set_text_color(s_question_layer, GColorWhite);
-  text_layer_set_text_alignment(s_question_layer, GTextAlignmentCenter);
-  text_layer_set_background_color(s_question_layer, GColorClear);
-  layer_add_child(window_layer, text_layer_get_layer(s_question_layer));
+  s_top_layer = text_layer_create(GRect(5, 5, bounds.size.w - 10, bounds.size.h));
+  text_layer_set_font(s_top_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+  text_layer_set_text_color(s_top_layer, GColorWhite);
+  text_layer_set_text_alignment(s_top_layer, GTextAlignmentCenter);
+  text_layer_set_background_color(s_top_layer, GColorClear);
+  layer_add_child(window_layer, text_layer_get_layer(s_top_layer));
 
   s_prompt_layer = text_layer_create(GRect(5, 120, bounds.size.w - 10, bounds.size.h));
   text_layer_set_text(s_prompt_layer, "Press Select to speak your answer!");
@@ -111,14 +76,14 @@ static void window_load(Window *window) {
 #if defined(PBL_ROUND)
   const uint8_t inset = 3;
 
-  text_layer_enable_screen_text_flow_and_paging(s_question_layer, inset);
+  text_layer_enable_screen_text_flow_and_paging(s_top_layer, inset);
   text_layer_enable_screen_text_flow_and_paging(s_prompt_layer, inset);
 #endif
 }
 
 static void window_unload(Window *window) {
   text_layer_destroy(s_prompt_layer);
-  text_layer_destroy(s_question_layer);
+  text_layer_destroy(s_top_layer);
 }
 
 static void init() {
@@ -135,8 +100,7 @@ static void init() {
                                                  dictation_session_callback, NULL);
 
   window_set_background_color(s_main_window, GColorDarkGray);
-  s_current_question = 0;
-  text_layer_set_text(s_question_layer, s_questions[s_current_question]);
+  text_layer_set_text(s_top_layer, "songgen");
   s_speaking_enabled = true;
 }
 
