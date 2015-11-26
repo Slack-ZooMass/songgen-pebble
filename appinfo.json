@@ -1,10 +1,13 @@
 {
     "appKeys": {
         "KEY_ACCESS_TOKEN": 1,
+        "KEY_CREDENTIALS_SAVED": 3,
+        "KEY_ERROR_CREDENTIALS_MISSING": 4,
+        "KEY_ERROR_HTTP": 7,
         "KEY_JS_READY": 0,
-        "KEY_PLAYLIST_ID": 4,
+        "KEY_PLAYLIST_ID": 6,
         "KEY_REFRESH_TOKEN": 2,
-        "KEY_WORDS": 3
+        "KEY_WORDS": 5
     },
     "capabilities": [
         "configurable"
