@@ -6,10 +6,11 @@ static TextLayer *s_top_layer, *s_prompt_layer;
 // Keys for communicating with JS
 typedef enum {
   KEY_JS_READY = 0,
-  KEY_ACCESS_TOKEN = 1,
-  KEY_REFRESH_TOKEN = 2,
-  KEY_WORDS = 3,
-  KEY_PLAYLIST_ID = 4
+  KEY_CREDENTIALS_SAVED = 3,
+  KEY_ERROR_CREDENTIALS_MISSING = 4,
+  KEY_WORDS = 5,
+  KEY_PLAYLIST_ID = 6,
+  KEY_ERROR_HTTP = 7
 } AppKey;
 
 static DictationSession *s_dictation_session;
@@ -17,10 +18,6 @@ static char s_last_text[256];
 
 static bool s_speaking_enabled;
 static bool s_js_ready;
-
-typedef struct Credentials {
-  //TODO: use padding?
-}
 
 /********************************* Quiz Logic *********************************/
 
@@ -38,12 +35,12 @@ static void result_handler(char *playlistID) {
   app_timer_register(3000, prompt_handler, NULL);
 }
 
-static void generate(char *answer) {
+static void generate(char *transcription) {
   text_layer_set_text(s_top_layer, "songgen");
   text_layer_set_text(s_prompt_layer, "Sending to server...");
 
   //TODO: Send to server
-
+  request_playlist(transcription);
 }
 
 /******************************* Dictation API ********************************/
@@ -67,23 +64,45 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     s_js_ready = true;
   }
   
-  Tuple *access_token_tuple = dict_find(iter, KEY_ACCESS_TOKEN);
-  Tuple *refresh_token_tuple = dict_find(iter, KEY_REFRESH_TOKEN);
-  if(access_token_tuple && refresh_token_tuple) {
-    // We have credentials to save!
-  }
-  
   Tuple *playlistID_tuple = dict_find(iter, KEY_PLAYLIST_ID);
   if(playlistID_tuple) {
     // We completed creating a playlist!
     result_handler(playlistID_tuple->value->cstring); //TODO: check this
   }
+  
+  // Errors
+  
+  Tuple *error_credentials_missing = dict_find(iter, KEY_ERROR_CREDENTIALS_MISSING);
+  if(error_credentials_missing) {
+    // Let the UI know to go to config!
+  }
+  
+  Tuple *error_http = dict_find(iter, KEY_ERROR_HTTP);
+  if(error_http) {
+    // Let the UI know the internet isnt working!
+    // Also let them retry!
+  }
+}
+
+static void request_playlist(char *words) {
+  DictionaryIterator *iter;
+  app_message_outbox_begin(&iter);
+
+  if (!iter) {
+    // Error creating outbound message
+    return;
+  }
+
+  dict_write_cstring(iter, 0, words);
+  dict_write_end(iter); //?
+
+  app_message_outbox_send();
 }
 
 /************************************ App *************************************/
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
-  if(s_speaking_enabled) {
+  if(s_speaking_enabled && s_js_ready) {
     // Start voice dictation UI
     dictation_session_start(s_dictation_session);
     s_speaking_enabled = false;
