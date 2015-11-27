@@ -48,7 +48,7 @@ static void generate(char *transcription) {
     return;
   }
 
-  dict_write_cstring(iter, 0, transcription);
+  dict_write_cstring(iter, KEY_WORDS, transcription);
   dict_write_end(iter); //?
 
   app_message_outbox_send();

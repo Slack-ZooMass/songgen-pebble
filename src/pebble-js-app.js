@@ -52,6 +52,7 @@ function generatePlaylist(access_token, refresh_token, words) {
   var req = new XMLHttpRequest();
   var url = 'http://songgen.herokuapp.com/build-playlist/with-words';
   var params = 'access_token=' + access_token + '&refresh_token=' + refresh_token + '&words=' + words;
+  params = encodeURIComponent(params);
   req.open('POST', url, true);
   
   req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
