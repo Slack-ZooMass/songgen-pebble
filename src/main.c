@@ -40,7 +40,18 @@ static void generate(char *transcription) {
   text_layer_set_text(s_prompt_layer, "Sending to server...");
 
   //TODO: Send to server
-  request_playlist(transcription);
+  DictionaryIterator *iter;
+  app_message_outbox_begin(&iter);
+
+  if (!iter) {
+    // Error creating outbound message
+    return;
+  }
+
+  dict_write_cstring(iter, 0, transcription);
+  dict_write_end(iter); //?
+
+  app_message_outbox_send();
 }
 
 /******************************* Dictation API ********************************/
@@ -82,21 +93,6 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     // Let the UI know the internet isnt working!
     // Also let them retry!
   }
-}
-
-static void request_playlist(char *words) {
-  DictionaryIterator *iter;
-  app_message_outbox_begin(&iter);
-
-  if (!iter) {
-    // Error creating outbound message
-    return;
-  }
-
-  dict_write_cstring(iter, 0, words);
-  dict_write_end(iter); //?
-
-  app_message_outbox_send();
 }
 
 /************************************ App *************************************/

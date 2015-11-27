@@ -20,17 +20,17 @@ Pebble.addEventListener('webviewclosed', function(e) {
 
 // Watchapp
 
-Pebble.addEventListener("ready", function(e) {
-  console.log("PebbleKit JS ready!");
+Pebble.addEventListener('ready', function(e) {
+  console.log('PebbleKit JS ready!');
 
   // Notify the watchapp that it is now safe to send messages
   sendToPebble({ 'KEY_JS_READY': true });
 });
 
-Pebble.addEventListener('generate', function(e) {
+Pebble.addEventListener('appmessage', function(e) {
   // Decode and parse data from Pebble watchapp
   var request = e.payload;
-  console.log('Received message: ' + JSON.stringify(request));
+  console.log('Received message: ' + JSON.stringify(e));
   
   var access_token = localStorage.getItem('KEY_ACCESS_TOKEN');
   var refresh_token = localStorage.getItem('KEY_REFRESH_TOKEN');
