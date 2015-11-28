@@ -36,7 +36,7 @@ Pebble.addEventListener('appmessage', function(e) {
   var params = {
     access_token : localStorage.getItem('KEY_ACCESS_TOKEN'),
     refresh_token : localStorage.getItem('KEY_REFRESH_TOKEN'),
-    words : request['KEY_WORDS']
+    words : request['KEY_WORDS'].split(' ')
   };
   
   if (params.access_token && params.refresh_token) {
@@ -59,7 +59,7 @@ function post(url, params, callback) {
   var req = new XMLHttpRequest();
   req.open('POST', url, true);
   
-  req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+  req.setRequestHeader("Content-type", "application/json");
   req.setRequestHeader("Content-length", params.length);
   //req.setRequestHeader("Connection", "close");
   
@@ -74,7 +74,7 @@ function post(url, params, callback) {
       }
     }
   };
-  req.send(params);
+  req.send(JSON.stringify(params));
 }
 
 function sendToPebble(dict) {
