@@ -32,27 +32,31 @@ Pebble.addEventListener('appmessage', function(e) {
   var request = e.payload;
   console.log('Received message: ' + JSON.stringify(e));
   
-  var access_token = localStorage.getItem('KEY_ACCESS_TOKEN');
-  var refresh_token = localStorage.getItem('KEY_REFRESH_TOKEN');
-  var words = request['KEY_WORDS'];
+  var url = 'http://songgen.herokuapp.com/build-playlist/with-words';
+  var params = {
+    access_token : localStorage.getItem('KEY_ACCESS_TOKEN'),
+    refresh_token : localStorage.getItem('KEY_REFRESH_TOKEN'),
+    words : request['KEY_WORDS']
+  };
   
-  console.log('access_token: ' + access_token);
-  console.log('refresh_token: ' + refresh_token);
-  console.log('words: ' + words);
-  
-  if (access_token && refresh_token) {
-    generatePlaylist(access_token, refresh_token, words);
+  if (params.access_token && params.refresh_token) {
+    post(url, params, function(response) {
+      if (response.refresh_token) {
+        // Save to persistent storage on phone
+        localStorage.setItem('KEY_ACCESS_TOKEN', config_data['access_token']);
+        localStorage.setItem('KEY_REFRESH_TOKEN', config_data['refresh_token']);
+      }
+
+      // Send response to Pebble watchapp
+      sendToPebble({ 'KEY_PLAYLIST_ID': response.playlistID });
+    });
   } else {
     sendToPebble({ 'KEY_ERROR_CREDENTIALS_MISSING': true });
-  }
-  
+  }  
 });
 
-function generatePlaylist(access_token, refresh_token, words) {
+function post(url, params, callback) {
   var req = new XMLHttpRequest();
-  var url = 'http://songgen.herokuapp.com/build-playlist/with-words';
-  var params = 'access_token=' + access_token + '&refresh_token=' + refresh_token + '&words=' + words;
-  params = encodeURIComponent(params);
   req.open('POST', url, true);
   
   req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -63,16 +67,7 @@ function generatePlaylist(access_token, refresh_token, words) {
     if (req.readyState === 4) {
       if (req.status === 200) {
         console.log(req.responseText);
-        var response = JSON.parse(req.responseText);
-        
-        if (response.refresh_token) {
-          // Save to persistent storage on phone
-          localStorage.setItem('KEY_ACCESS_TOKEN', config_data['access_token']);
-          localStorage.setItem('KEY_REFRESH_TOKEN', config_data['refresh_token']);
-        }
-        
-        // Send response to Pebble watchapp
-        sendToPebble({ 'KEY_PLAYLIST_ID': response.playlistID });
+        callback(JSON.parse(req.responseText));
       } else {
         console.log('Error with request');
         sendToPebble({ 'KEY_ERROR_HTTP': true });
