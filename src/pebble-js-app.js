@@ -49,13 +49,16 @@ Pebble.addEventListener('appmessage', function(e) {
   
   if (params.access_token && params.refresh_token) {
     post(url, params, function(response) {
-      if (response.access_token) {
+      var access_token = response.access_token;
+      var playlistID = response.playlistID;
+      
+      if (access_token) {
         // Save to persistent storage on phone
-        localStorage.setItem('KEY_ACCESS_TOKEN', config_data['access_token']);
+        localStorage.setItem('KEY_ACCESS_TOKEN', access_token);
       }
 
       // Send response to Pebble watchapp
-      sendToPebble({ 'KEY_PLAYLIST_ID': response.playlistID });
+      sendToPebble({ 'KEY_PLAYLIST_ID': playlistID });
     });
   } else {
     sendToPebble({ 'KEY_ERROR_CREDENTIALS_MISSING': true });
