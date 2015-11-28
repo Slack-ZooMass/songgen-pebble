@@ -50,7 +50,8 @@ Pebble.addEventListener('appmessage', function(e) {
   if (params.access_token && params.refresh_token) {
     post(url, params, function(response) {
       var access_token = response.access_token;
-      var playlistID = response.playlistID;
+      var user_id = response.user_id;
+      var playlist_id = response.playlist_id;
       
       if (access_token) {
         // Save to persistent storage on phone
@@ -58,7 +59,10 @@ Pebble.addEventListener('appmessage', function(e) {
       }
 
       // Send response to Pebble watchapp
-      sendToPebble({ 'KEY_PLAYLIST_ID': playlistID });
+      sendToPebble({ 'KEY_PLAYLIST_ID': playlist_id });
+      
+      // Open Spotify to play the music
+      // Pebble.openURL('http://open.spotify.com/user/' + user_id + '/playlist/' + playlist_id);
     });
   } else {
     sendToPebble({ 'KEY_ERROR_CREDENTIALS_MISSING': true });
