@@ -6,11 +6,10 @@ static TextLayer *s_top_layer, *s_prompt_layer;
 // Keys for communicating with JS
 typedef enum {
   KEY_JS_READY = 0,
-  KEY_CREDENTIALS_SAVED = 3,
-  KEY_ERROR_CREDENTIALS_MISSING = 4,
-  KEY_WORDS = 5,
-  KEY_PLAYLIST_ID = 6,
-  KEY_ERROR_HTTP = 7
+  KEY_ERROR_CREDENTIALS_MISSING = 3,
+  KEY_WORDS = 4,
+  KEY_PLAYLIST_ID = 5,
+  KEY_ERROR_HTTP = 6
 } AppKey;
 
 static DictationSession *s_dictation_session;
@@ -19,7 +18,7 @@ static char s_last_text[256];
 static bool s_speaking_enabled;
 static bool s_js_ready;
 
-/********************************* Quiz Logic *********************************/
+/********************************** UI Logic **********************************/
 
 static void prompt_handler(void *context) {
   text_layer_set_text(s_top_layer, "songgen");
@@ -39,7 +38,6 @@ static void generate(char *transcription) {
   text_layer_set_text(s_top_layer, "songgen");
   text_layer_set_text(s_prompt_layer, "Sending to server...");
 
-  //TODO: Send to server
   DictionaryIterator *iter;
   app_message_outbox_begin(&iter);
 
@@ -52,6 +50,12 @@ static void generate(char *transcription) {
   dict_write_end(iter); //?
 
   app_message_outbox_send();
+}
+
+static void config_handler() {
+  text_layer_set_text(s_top_layer, "songgen");
+  text_layer_set_text(s_prompt_layer, "Setup in the Pebble app to continue!");
+  window_set_background_color(s_main_window, GColorDarkGray);
 }
 
 /******************************* Dictation API ********************************/
@@ -78,7 +82,7 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   Tuple *playlistID_tuple = dict_find(iter, KEY_PLAYLIST_ID);
   if(playlistID_tuple) {
     // We completed creating a playlist!
-    result_handler(playlistID_tuple->value->cstring); //TODO: check this
+    result_handler(playlistID_tuple->value->cstring);
   }
   
   // Errors
@@ -86,6 +90,7 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   Tuple *error_credentials_missing = dict_find(iter, KEY_ERROR_CREDENTIALS_MISSING);
   if(error_credentials_missing) {
     // Let the UI know to go to config!
+    config_handler();
   }
   
   Tuple *error_http = dict_find(iter, KEY_ERROR_HTTP);
@@ -159,8 +164,6 @@ static void init() {
   s_speaking_enabled = true;
   s_js_ready = false;
   
-  //TODO: persistent storage load for credentials
-  
   // Handle talking to JS
   app_message_register_inbox_received(inbox_received_handler);
   app_message_open(64, 64);
@@ -169,8 +172,6 @@ static void init() {
 static void deinit() {
   // Free the last session data
   dictation_session_destroy(s_dictation_session);
-  
-  //TODO: persistent storage for credentials
 
   window_destroy(s_main_window);
 }

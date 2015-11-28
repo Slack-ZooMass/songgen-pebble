@@ -14,17 +14,25 @@ Pebble.addEventListener('webviewclosed', function(e) {
   localStorage.setItem('KEY_ACCESS_TOKEN', config_data['access_token']);
   localStorage.setItem('KEY_REFRESH_TOKEN', config_data['refresh_token']);
 
-  // Send settings to Pebble watchapp
-  sendToPebble({ 'KEY_CREDENTIALS_SAVED': true });
+  // Notify the watchapp that it is now safe to send messages
+  sendToPebble({ 'KEY_JS_READY': true });
 });
 
 // Watchapp
 
 Pebble.addEventListener('ready', function(e) {
   console.log('PebbleKit JS ready!');
+  
+  var access_token = localStorage.getItem('KEY_ACCESS_TOKEN');
+  var refresh_token = localStorage.getItem('KEY_REFRESH_TOKEN');
 
-  // Notify the watchapp that it is now safe to send messages
-  sendToPebble({ 'KEY_JS_READY': true });
+  if (access_token && refresh_token) {
+    // Notify the watchapp that it is now safe to send messages
+    sendToPebble({ 'KEY_JS_READY': true });
+  } else {
+    // We need the user to go to the configuration screen
+    sendToPebble({ 'KEY_ERROR_CREDENTIALS_MISSING': true });
+  }
 });
 
 Pebble.addEventListener('appmessage', function(e) {
