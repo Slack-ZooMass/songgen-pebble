@@ -41,10 +41,9 @@ Pebble.addEventListener('appmessage', function(e) {
   
   if (params.access_token && params.refresh_token) {
     post(url, params, function(response) {
-      if (response.refresh_token) {
+      if (response.access_token) {
         // Save to persistent storage on phone
         localStorage.setItem('KEY_ACCESS_TOKEN', config_data['access_token']);
-        localStorage.setItem('KEY_REFRESH_TOKEN', config_data['refresh_token']);
       }
 
       // Send response to Pebble watchapp

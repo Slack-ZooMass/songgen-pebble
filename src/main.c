@@ -32,7 +32,7 @@ static void result_handler(char *playlistID) {
   text_layer_set_text(s_top_layer, playlistID);
   text_layer_set_text(s_prompt_layer, "Press Select to create a new playlist!");
   window_set_background_color(s_main_window, GColorDarkGray);
-  app_timer_register(3000, prompt_handler, NULL);
+  app_timer_register(5000, prompt_handler, NULL);
 }
 
 static void generate(char *transcription) {
@@ -120,8 +120,8 @@ static void window_load(Window *window) {
   text_layer_set_background_color(s_top_layer, GColorClear);
   layer_add_child(window_layer, text_layer_get_layer(s_top_layer));
 
-  s_prompt_layer = text_layer_create(GRect(5, 120, bounds.size.w - 10, bounds.size.h));
-  text_layer_set_text(s_prompt_layer, "Press Select to speak your answer!");
+  s_prompt_layer = text_layer_create(GRect(5, 100, bounds.size.w - 10, bounds.size.h));
+  text_layer_set_text(s_prompt_layer, "Press Select to create a new playlist!");
   text_layer_set_font(s_prompt_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   text_layer_set_text_color(s_prompt_layer, GColorWhite);
   text_layer_set_text_alignment(s_prompt_layer, GTextAlignmentCenter);
